@@ -33,6 +33,8 @@ fabfile.py: 自动部署的python脚本
 
 Nignx配置文件中除了指定监听端口、日志位置等，还需要配置proxy_pass，其值是由lua-script/main.lua确定的。
 
+```nginx
+
 worker_processes 4;
 pid logs/nginx.pid;
 
@@ -99,12 +101,16 @@ http {
 
 } 
 
+```
+
 ## 6、Lua脚本
 
 mian.lua是用途是确定某个请求发往哪个后端的，将结果赋值给backend。部分代码如下所示
 最重要的代码其实只有两行，根据请求头部的zone，得到_upstream的名字，然后赋值给变量backend
     _upstream = 'unettool-proxy-'..tostring(zone)
     ngx.var.backend = _upstream
+```lua
+
 function _send_error_response(err)
     -- 一些设置
     ngx.say('{"RetCode": 230, "Message": "Param [Zone] is required"}')
@@ -155,9 +161,13 @@ end
 
 ngx.var.backend = _upstream
 
+```
+
 ## 7、Upstream的配置
 
 示例如下：
+
+```nginx
 
 upstream unettool-proxy-cn-bj1-01{
     keepalive 1000;
@@ -171,12 +181,15 @@ upstream unettool-proxy-cn-sh2-02{
     keepalive 1000;
     server 172.X.X.X:2003;
 }
+```
 
 到这里基本上，就算完成了，为了方便我们快速部署，写了一个简单的fabfile文件。
 
 ## 8、fabfile自动部署
 
 这一步没什么可说的，就是用python的fabric库执行一些远程和本地的命令。
+
+```python 
 
 #! /usr/bin/env python
 
@@ -205,3 +218,4 @@ def updateUpstreamConf():
     put('conf/upstreams.conf', '/data/unettool-proxy/conf/')
     run('cd /data/unettool-proxy/ && /usr/local/openresty/nginx/sbin/nginx -p /data/unettool-proxy/ -c conf/nginx.conf -s stop')
     run('cd /data/unettool-proxy/ && /usr/local/openresty/nginx/sbin/nginx -p /data/unettoo
+```
